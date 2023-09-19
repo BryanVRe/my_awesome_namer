@@ -1,7 +1,7 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'loggin.dart';
 
 void main() {
   runApp(MyApp());
@@ -20,7 +20,11 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 9, 155, 148)),
         ),
-        home: MyHomePage(),
+        initialRoute: '/', // Ruta inicial, que es la página de inicio de sesión
+        routes: {
+          '/': (context) => LoginPage(), // Ruta para la página de inicio de sesión
+          '/main': (context) => MyHomePage(), // Ruta para la página principal
+        },
       ),
     );
   }
@@ -53,58 +57,88 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   var selectedIndex = 0;
+
+  // Función para cerrar sesión
+  void _logout(BuildContext context) {
+    // Implementa aquí la lógica de cierre de sesión si es necesario.
+    // Por ejemplo, puedes eliminar tokens de autenticación, restablecer el estado, etc.
+
+    // Luego, navega de nuevo a la página de inicio de sesión.
+    Navigator.pushReplacementNamed(context, '/');
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget page;
-switch (selectedIndex) {
-  case 0:
-    page = GeneratorPage();
-    break;
-  case 1:
-    page = FavoritesPage();
-    break;
-  default:
-    throw UnimplementedError('no widget for $selectedIndex');
-}
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = FavoritesPage();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         return Scaffold(
-          body: Row(
+          appBar: AppBar(
+            title: Text('Página Principal'),
+          ),
+          body: Stack(
             children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
+              Row(
+                children: [
+                  SafeArea(
+                    child: NavigationRail(
+                      extended: constraints.maxWidth >= 600,
+                      destinations: [
+                        NavigationRailDestination(
+                          icon: Icon(Icons.home),
+                          label: Text('Home'),
+                        ),
+                        NavigationRailDestination(
+                          icon: Icon(Icons.favorite),
+                          label: Text('Favorites'),
+                        ),
+                      ],
+                      selectedIndex: selectedIndex,
+                      onDestinationSelected: (value) {
+                        setState(() {
+                          selectedIndex = value;
+                        });
+                      },
                     ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/');
+                      },
+                      child: Container(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: page,
+                      ),
                     ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-
-                  },
-                ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: IconButton(
+                    icon: Icon(Icons.logout),
+                    onPressed: () => _logout(context),
+                  ),
                 ),
               ),
             ],
           ),
         );
-      }
+      },
     );
   }
 }
@@ -126,8 +160,8 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            Bigcard(pair: pair),
-            SizedBox(height: 10),
+          Bigcard(pair: pair),
+          SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -152,6 +186,7 @@ class GeneratorPage extends StatelessWidget {
     );
   }
 }
+
 class Bigcard extends StatelessWidget {
   const Bigcard({
     super.key,
@@ -161,7 +196,7 @@ class Bigcard extends StatelessWidget {
   final WordPair pair;
 
   @override
- Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
@@ -171,8 +206,6 @@ class Bigcard extends StatelessWidget {
       color: theme.colorScheme.primary,
       child: Padding(
         padding: const EdgeInsets.all(20),
-
-        // ↓ Make the following change.
         child: Text(
           pair.asLowerCase,
           style: style,
@@ -182,7 +215,6 @@ class Bigcard extends StatelessWidget {
     );
   }
 }
-
 
 class FavoritesPage extends StatelessWidget {
   @override
